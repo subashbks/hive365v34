@@ -7,8 +7,8 @@
 #pragma newdecls required
 
 //Defines
-#define PLUGIN_VERSION			"4.0.5.5"
-#define DEFAULT_RADIO_VOLUME		20
+#define PLUGIN_VERSION		"4.0.5.6"
+#define DEFAULT_RADIO_VOLUME	"15"
 char RADIO_PLAYER_URL[]		=	"hive365.co.uk/plugin/player";
 char CHAT_PREFIX[]			=	"\x03[\x04Hive365\x03]";
 
@@ -125,8 +125,8 @@ public void OnPluginStart()
 	menuHelp.AddItem("2", "Type !song to get the song info");
 	menuHelp.AddItem("3", "Type !choon or !ch to like a song");
 	menuHelp.AddItem("4", "Type !poon or !p to dislike a song");
-	menuHelp.AddItem("-1", "Type !request or !req to request a song");
-	menuHelp.AddItem("-1", "Type !shoutout or !sh to request a shoutout");
+	menuHelp.AddItem("5", "Type !request or !req to request a song");
+	menuHelp.AddItem("6", "Type !shoutout or !sh to request a shoutout");
 	menuHelp.Pagination = MENU_NO_PAGINATION;
 	menuHelp.ExitButton = true;
 	
@@ -316,10 +316,7 @@ public int RadioTunedMenuHandle(Menu menu, MenuAction action, int client, int op
 	if(action == MenuAction_Select && IsClientInGame(client))
 	{
 		char radiooption[3];
-		if(!menu.GetItem(option, radiooption, sizeof(radiooption)))
-		{
-			PrintToChat(client, "%s \x04Unknown option selected", CHAT_PREFIX);
-		}
+		menu.GetItem(option, radiooption, sizeof(radiooption));
 		switch(view_as<RadioOptions>(StringToInt(radiooption)))
 		{
 			case Radio_Volume:
@@ -354,10 +351,7 @@ public int RadioVolumeMenuHandle(Menu menu, MenuAction action, int client, int o
 	if(action == MenuAction_Select && IsClientInGame(client))
 	{
 		char szVolume[10];
-		if(!menu.GetItem(option, szVolume, sizeof(szVolume)))
-		{
-			PrintToChat(client, "%s \x04Unknown option selected.", CHAT_PREFIX);
-		}
+		menu.GetItem(option, szVolume, sizeof(szVolume));
 		char szURL[sizeof(RADIO_PLAYER_URL) + 15];
 		Format(szURL, sizeof(szURL), "%s?volume=%s", RADIO_PLAYER_URL, szVolume);
 		LoadMOTDPanel(client, "Hive365", szURL);
@@ -370,38 +364,56 @@ public int HelpMenuHandle(Menu menu, MenuAction action, int client, int option)
 	if(action == MenuAction_Select && IsClientInGame(client))
 	{
 		char radiooption[3];
-		if(!menu.GetItem(option, radiooption, sizeof(radiooption)))
-		{
-			PrintToChat(client, "%s \x04Unknown option selected.", CHAT_PREFIX);
-		}
-		
+		menu.GetItem(option, radiooption, sizeof(radiooption));
 		switch(StringToInt(radiooption))
 		{
 			case 0:
-			{
 				Cmd_RadioMenu(client, 0);
-			}
 			case 1:
-			{
 				Cmd_DjInfo(client, 0);
-			}
 			case 2:
-			{
 				Cmd_SongInfo(client, 0);
-			}
 			case 3:
-			{
 				Cmd_Choon(client, 0);
-			}
 			case 4:
-			{
 				Cmd_Poon(client, 0);
-			}
+			case 5:
+				Cmd_Request(client, 0);
+			case 6:
+				Cmd_Shoutout(client, 0);
 		}
 	}
 }
 
 //Functions
+void DisplayRadioMenu(int client)
+{
+	if(convarEnabled.BoolValue)
+	{
+		if(!bIsTunedIn[client])
+		{
+			char szURL[sizeof(RADIO_PLAYER_URL) + 15];
+			Format(szURL, sizeof(szURL), "%s?volume=%s", RADIO_PLAYER_URL, DEFAULT_RADIO_VOLUME);
+			LoadMOTDPanel(client, "Hive365", szURL);
+			bIsTunedIn[client] = true;
+		}
+	}
+	else
+		PrintToChat(client, "%s \x04Hive365 Radio is currently disabled", CHAT_PREFIX);
+}
+
+void LoadMOTDPanel(int client, const char [] title, const char [] page)
+{
+	if(client == 0  || !IsClientInGame(client))
+		return;
+	KeyValues kv = new KeyValues("data");
+	kv.SetString("title", title);
+	kv.SetNum("type", MOTDPANEL_TYPE_URL);
+	kv.SetString("msg", page);
+	ShowVGUIPanel(client, "info", kv, false);
+	delete kv;
+}
+
 bool HandleSteamIDTracking(StringMap map, int client, bool checkTime = false, int timeCheck = 0)
 {
 	char steamid[32];
@@ -439,37 +451,6 @@ bool HandleSteamIDTracking(StringMap map, int client, bool checkTime = false, in
 			return true;
 		}
 	}
-}
-
-void DisplayRadioMenu(int client)
-{
-	if(convarEnabled.BoolValue)
-	{
-		if(!bIsTunedIn[client])
-		{
-			char szURL[sizeof(RADIO_PLAYER_URL) + 15];
-			Format(szURL, sizeof(szURL), "%s?volume=15", RADIO_PLAYER_URL);
-			LoadMOTDPanel(client, "Hive365", szURL);
-			bIsTunedIn[client] = true;
-		}
-	}
-	else
-	{
-		PrintToChat(client, "%s \x04Hive365 Radio is currently disabled", CHAT_PREFIX);
-	}
-}
-
-void LoadMOTDPanel(int client, const char [] title, const char [] page)
-{
-	if(client == 0  || !IsClientInGame(client))
-		return;
-	
-	KeyValues kv = new KeyValues("data");
-	kv.SetString("title", title);
-	kv.SetNum("type", MOTDPANEL_TYPE_URL);
-	kv.SetString("msg", page);
-	ShowVGUIPanel(client, "info", kv, false);
-	delete kv;
 }
 
 void MakeSocketRequest(SocketInfo type, int serial = 0, const char [] buffer = "")
