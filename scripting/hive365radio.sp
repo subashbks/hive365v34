@@ -3,10 +3,6 @@
 #include <base64>
 #include <json>
 
-#undef REQUIRE_PLUGIN
-#include <updater>
-#define UPDATE_URL    "http://tasteful-readiness.000webhostapp.com/plugins/hive365v34/updatefile.txt"
-
 #pragma semicolon 1
 #pragma newdecls required
 
@@ -151,20 +147,6 @@ public void OnPluginStart()
 	CreateTimer(INFO_REFRESH_RATE, GetStreamInfoTimer, _, TIMER_REPEAT);
 	
 	for(int i = 0; i <= MaxClients; i++){bIsTunedIn[i] = false;}
-	
-	
-	if (LibraryExists("updater"))
-	{
-		Updater_AddPlugin(UPDATE_URL);
-	}
-}
-
-public void OnLibraryAdded(const char[] name)
-{
-    if (StrEqual(name, "updater"))
-    {
-        Updater_AddPlugin(UPDATE_URL);
-    }
 }
 
 public void OnMapStart()
