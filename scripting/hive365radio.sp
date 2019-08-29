@@ -11,7 +11,7 @@
 #pragma newdecls required
 
 //Defines
-#define PLUGIN_VERSION	"4.0.5.1"
+#define PLUGIN_VERSION	"4.0.5.2"
 char RADIO_PLAYER_URL[] = "hive365.co.uk/plugin/player";
 #define DEFAULT_RADIO_VOLUME 20
 
@@ -116,10 +116,7 @@ public void OnPluginStart()
 	menuVolume.AddItem("50", "Volume: 50%");
 	menuVolume.AddItem("75", "Volume: 75%");
 	menuVolume.AddItem("100", "Volume: 100%");
-	if(GetEngineVersion() != Engine_CSGO)// We could remove one for csgo maybe
-	{
-		menuVolume.Pagination = MENU_NO_PAGINATION;
-	}
+	menuVolume.Pagination = MENU_NO_PAGINATION;
 	menuVolume.ExitButton = true;
 	
 	menuHelp = new Menu(HelpMenuHandle);
@@ -131,8 +128,6 @@ public void OnPluginStart()
 	menuHelp.AddItem("4", "Type !poon in chat if you dislike a song");
 	menuHelp.AddItem("-1", "Type !request song name in chat to request a song");
 	menuHelp.AddItem("-1", "Type !shoutout shoutout in chat to request a shoutout");
-	menuHelp.AddItem("-1", "NOTE: Currently broken for CS:GO");
-	menuHelp.AddItem("-1", "NOTE: You must have HTML MOTD enabled!");
 	menuHelp.Pagination = MENU_NO_PAGINATION;
 	menuHelp.ExitButton = true;
 	
@@ -149,16 +144,6 @@ public void OnPluginStart()
 	char szPort[10];
 	FindConVar("hostport").GetString(szPort, sizeof(szPort));
 	EncodeBase64(szEncodedHostPort, sizeof(szEncodedHostPort), szPort);
-	
-	ConVar showInfo = FindConVar("host_info_show");//CS:GO Only... for now
-	if(showInfo)
-	{
-		if(showInfo.IntValue < 1)
-		{
-			showInfo.IntValue = 1;
-		}
-		showInfo.AddChangeHook(HookShowInfo);
-	}
 	
 	MakeSocketRequest(SocketInfo_Info);
 	
@@ -206,14 +191,6 @@ public void OnClientPutInServer(int client)
 public void HookHostnameChange(ConVar convar, const char[] oldValue, const char[] newValue)
 {
 	EncodeBase64(szEncodedHostname, sizeof(szEncodedHostname), newValue);
-}
-
-public void HookShowInfo(ConVar convar, const char[] oldValue, const char[] newValue)
-{
-	if(convar.IntValue < 1)
-	{
-		convar.IntValue = 1;
-	}
 }
 
 //Timer Handlers
