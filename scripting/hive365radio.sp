@@ -7,7 +7,7 @@
 #pragma newdecls required
 
 //Defines
-#define PLUGIN_VERSION			"4.0.5.3"
+#define PLUGIN_VERSION			"4.0.5.4"
 #define DEFAULT_RADIO_VOLUME		20
 char RADIO_PLAYER_URL[]		=	"hive365.co.uk/plugin/player";
 char CHAT_PREFIX[]			=	"\x03[\x04Hive365\x03]";
@@ -41,9 +41,10 @@ StringMap stringmapDJFTW;
 //enum's
 enum RadioOptions
 {
-	Radio_Volume,
+	Radio_On,
 	Radio_Off,
-	Radio_Help,
+	Radio_Volume,
+	Radio_Help
 };
 
 enum SocketInfo
@@ -54,7 +55,7 @@ enum SocketInfo
 	SocketInfo_Choon,
 	SocketInfo_Poon,
 	SocketInfo_DjFtw,
-	SocketInfo_HeartBeat,
+	SocketInfo_HeartBeat
 };
 
 char szEncodedHostip[128] = "";
@@ -76,7 +77,9 @@ public void OnPluginStart()
 	stringmapDJFTW = new StringMap();
 	
 	RegConsoleCmd("sm_radio", Cmd_RadioMenu);
+	RegConsoleCmd("sm_hive", Cmd_RadioMenu);
 	RegConsoleCmd("sm_radiohelp", Cmd_RadioHelp);
+	RegConsoleCmd("sm_hivehelp", Cmd_RadioHelp);
 	RegConsoleCmd("sm_dj", Cmd_DjInfo);
 	RegConsoleCmd("sm_song", Cmd_SongInfo);
 	RegConsoleCmd("sm_shoutout", Cmd_Shoutout);
@@ -94,23 +97,23 @@ public void OnPluginStart()
 	AutoExecConfig();
 	
 	menuTuned = new Menu(RadioTunedMenuHandle);
-	menuTuned.SetTitle("Hive365 Radio");
-	//menuTuned.AddItem("0", "Adjust Volume");
-	menuTuned.AddItem("0", "Start Hive365 Radio");
-	menuTuned.AddItem("1", "Stop Hive365 Radio");
-	menuTuned.AddItem("2", "Hive365 Help");
+	menuTuned.SetTitle("Hive365");
+	menuTuned.AddItem("0", "Start Hive365");
+	menuTuned.AddItem("1", "Stop Hive365");
+	menuTuned.AddItem("2", "Hive365 Volume");
+	menuTuned.AddItem("3", "Hive365 Help");
 	menuTuned.ExitButton = true;
 	
 	menuVolume = new Menu(RadioVolumeMenuHandle);
-	menuVolume.SetTitle("Radio Options");
+	menuVolume.SetTitle("Hive365 Volume");
 	menuVolume.AddItem("1", "Volume: 1%");
 	menuVolume.AddItem("5", "Volume: 5%");
 	menuVolume.AddItem("10", "Volume: 10%");
-	menuVolume.AddItem("20", "Volume: 20% (default)");
-	menuVolume.AddItem("30", "Volume: 30%");
-	menuVolume.AddItem("40", "Volume: 40%");
+	menuVolume.AddItem("20", "Volume: 20% (Default)");
+	menuVolume.AddItem("35", "Volume: 35%");
 	menuVolume.AddItem("50", "Volume: 50%");
-	menuVolume.AddItem("75", "Volume: 75%");
+	menuVolume.AddItem("65", "Volume: 65%");
+	menuVolume.AddItem("80", "Volume: 80%");
 	menuVolume.AddItem("100", "Volume: 100%");
 	menuVolume.Pagination = MENU_NO_PAGINATION;
 	menuVolume.ExitButton = true;
@@ -334,7 +337,6 @@ public Action Cmd_RadioMenu(int client, int args)
 	if(client > 0 && client <= MaxClients && IsClientInGame(client))
 	{
 		menuTuned.Display(client, 30);
-		//DisplayRadioMenu(client);
 	}
 	
 	return Plugin_Handled;
@@ -380,18 +382,22 @@ public int RadioTunedMenuHandle(Menu menu, MenuAction action, int client, int op
 			{
 				if(client > 0 && client <= MaxClients && IsClientInGame(client))
 				{
+					menuVolume.Display(client, 30);
+				}
+			}
+			case Radio_On:
+			{
+				if(client > 0 && client <= MaxClients && IsClientInGame(client))
+				{
 					DisplayRadioMenu(client);
 				}
-				//menuVolume.Display(client, 30);
 			}
 			case Radio_Off:
 			{
 				if(bIsTunedIn[client])
 				{
 					PrintToChat(client, "%s Radio has been turned off. Thanks for listening!", CHAT_PREFIX);
-					
 					LoadMOTDPanel(client, "Thanks for listening", "about:blank");
-					
 					bIsTunedIn[client] = false;
 				}
 			}
@@ -408,18 +414,13 @@ public int RadioVolumeMenuHandle(Menu menu, MenuAction action, int client, int o
 	if(action == MenuAction_Select && IsClientInGame(client))
 	{
 		char szVolume[10];
-		
 		if(!menu.GetItem(option, szVolume, sizeof(szVolume)))
 		{
 			PrintToChat(client, "%s Unknown option selected.", CHAT_PREFIX);
 		}
-		
 		char szURL[sizeof(RADIO_PLAYER_URL) + 15];
-		
-		Format(szURL, sizeof(szURL), RADIO_PLAYER_URL);
-	
+		Format(szURL, sizeof(szURL), "%s?volume=%s", RADIO_PLAYER_URL, szVolume);
 		LoadMOTDPanel(client, "Hive365", szURL);
-		
 		bIsTunedIn[client] = true;
 	}
 }
@@ -507,17 +508,14 @@ void DisplayRadioMenu(int client)
 		if(!bIsTunedIn[client])
 		{
 			char szURL[sizeof(RADIO_PLAYER_URL) + 15];
-			
-			Format(szURL, sizeof(szURL), RADIO_PLAYER_URL);
-			
+			Format(szURL, sizeof(szURL), "%s?volume=20", RADIO_PLAYER_URL);
 			LoadMOTDPanel(client, "Hive365", szURL);
-			
 			bIsTunedIn[client] = true;
 		}
 	}
 	else
 	{
-		PrintToChat(client, "%s Hive365 is currently disabled", CHAT_PREFIX);
+		PrintToChat(client, "%s \x04Hive365 is currently disabled", CHAT_PREFIX);
 	}
 }
 
@@ -527,13 +525,10 @@ void LoadMOTDPanel(int client, const char [] title, const char [] page)
 		return;
 	
 	KeyValues kv = new KeyValues("data");
-
 	kv.SetString("title", title);
 	kv.SetNum("type", MOTDPANEL_TYPE_URL);
 	kv.SetString("msg", page);
-
 	ShowVGUIPanel(client, "info", kv, false);
-	
 	delete kv;
 }
 
