@@ -7,15 +7,15 @@
 #pragma newdecls required
 
 //Defines
-#define PLUGIN_VERSION	"4.0.5.2"
-char RADIO_PLAYER_URL[] = "hive365.co.uk/plugin/player";
-#define DEFAULT_RADIO_VOLUME 20
+#define PLUGIN_VERSION			"4.0.5.3"
+#define DEFAULT_RADIO_VOLUME		20
+char RADIO_PLAYER_URL[]		=	"hive365.co.uk/plugin/player";
+char CHAT_PREFIX[]			=	"\x03[\x04Hive365\x03]";
 
 //Timer defines
 #define INFO_REFRESH_RATE 30.0
 #define HIVE_ADVERT_RATE 600.0
 #define HELP_TIMER_DELAY 15.0
-
 
 //Menu Handles
 Menu menuHelp;
@@ -65,7 +65,7 @@ public Plugin myinfo =
 	author = "Hive365.co.uk, return 0;",
 	description = "Hive365 In-Game Radio Player v34",
 	version = PLUGIN_VERSION,
-	url = "http://www.hive365.co.uk"
+	url = "http://www.hive365.co.uk, https://github.com/subashbks/hive365v34"
 }
 
 public void OnPluginStart()
@@ -80,13 +80,13 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_dj", Cmd_DjInfo);
 	RegConsoleCmd("sm_song", Cmd_SongInfo);
 	RegConsoleCmd("sm_shoutout", Cmd_Shoutout);
-	RegConsoleCmd("sm_request", Cmd_Request);
-	RegConsoleCmd("sm_choon", Cmd_Choon);
-	RegConsoleCmd("sm_poon", Cmd_Poon);
-	RegConsoleCmd("sm_req", Cmd_Request);
-	RegConsoleCmd("sm_ch", Cmd_Choon);
-	RegConsoleCmd("sm_p", Cmd_Poon);
 	RegConsoleCmd("sm_sh", Cmd_Shoutout);
+	RegConsoleCmd("sm_request", Cmd_Request);
+	RegConsoleCmd("sm_req", Cmd_Request);
+	RegConsoleCmd("sm_choon", Cmd_Choon);
+	RegConsoleCmd("sm_ch", Cmd_Choon);
+	RegConsoleCmd("sm_poon", Cmd_Poon);
+	RegConsoleCmd("sm_p", Cmd_Poon);
 	RegConsoleCmd("sm_djftw", Cmd_DjFtw);
 	
 	convarEnabled = CreateConVar("sm_hive365radio_enabled", "1", "Enable the radio?", _, true, 0.0, true, 1.0);
@@ -94,11 +94,11 @@ public void OnPluginStart()
 	AutoExecConfig();
 	
 	menuTuned = new Menu(RadioTunedMenuHandle);
-	menuTuned.SetTitle("Radio Options");
+	menuTuned.SetTitle("Hive365 Radio");
 	//menuTuned.AddItem("0", "Adjust Volume");
-	menuTuned.AddItem("0", "Start Radio (Will open motd window to play and adjust volume)");
-	menuTuned.AddItem("1", "Stop Radio");
-	menuTuned.AddItem("2", "Radio Help");
+	menuTuned.AddItem("0", "Start Hive365 Radio");
+	menuTuned.AddItem("1", "Stop Hive365 Radio");
+	menuTuned.AddItem("2", "Hive365 Help");
 	menuTuned.ExitButton = true;
 	
 	menuVolume = new Menu(RadioVolumeMenuHandle);
@@ -116,28 +116,24 @@ public void OnPluginStart()
 	menuVolume.ExitButton = true;
 	
 	menuHelp = new Menu(HelpMenuHandle);
-	menuHelp.SetTitle("Radio Help");
-	menuHelp.AddItem("0", "Type !radio in chat to tune in");
-	menuHelp.AddItem("1", "Type !dj in chat to get dj info");
-	menuHelp.AddItem("2", "Type !song in chat to get the song info");
-	menuHelp.AddItem("3", "Type !choon in chat if you like a song");
-	menuHelp.AddItem("4", "Type !poon in chat if you dislike a song");
-	menuHelp.AddItem("-1", "Type !request song name in chat to request a song");
-	menuHelp.AddItem("-1", "Type !shoutout shoutout in chat to request a shoutout");
+	menuHelp.SetTitle("Hive365 Help");
+	menuHelp.AddItem("0", "Type !radio or !hive to tune in");
+	menuHelp.AddItem("1", "Type !dj to get the dj info");
+	menuHelp.AddItem("2", "Type !song to get the song info");
+	menuHelp.AddItem("3", "Type !choon or !ch to like a song");
+	menuHelp.AddItem("4", "Type !poon or !p to dislike a song");
+	menuHelp.AddItem("-1", "Type !request or !req to request a song");
+	menuHelp.AddItem("-1", "Type !shoutout or !sh to request a shoutout");
 	menuHelp.Pagination = MENU_NO_PAGINATION;
 	menuHelp.ExitButton = true;
 	
 	ConVar hostname = FindConVar("hostname");
+	char szHostname[128];
+	hostname.GetString(szHostname, sizeof(szHostname));
+	EncodeBase64(szEncodedHostname, sizeof(szEncodedHostname), szHostname);
+	hostname.AddChangeHook(HookHostnameChange);
 	
-	if(hostname)
-	{
-		char szHostname[128];
-		hostname.GetString(szHostname, sizeof(szHostname));
-		EncodeBase64(szEncodedHostname, sizeof(szEncodedHostname), szHostname);
-		hostname.AddChangeHook(HookHostnameChange);
-	}
-	
-	char szPort[10];
+	char szPort[6];
 	FindConVar("hostport").GetString(szPort, sizeof(szPort));
 	EncodeBase64(szEncodedHostPort, sizeof(szEncodedHostPort), szPort);
 	
@@ -146,7 +142,8 @@ public void OnPluginStart()
 	CreateTimer(HIVE_ADVERT_RATE, ShowAdvert, _, TIMER_REPEAT);
 	CreateTimer(INFO_REFRESH_RATE, GetStreamInfoTimer, _, TIMER_REPEAT);
 	
-	for(int i = 0; i <= MaxClients; i++){bIsTunedIn[i] = false;}
+	for(int i = 0; i <= MaxClients; i++)
+		bIsTunedIn[i] = false;
 }
 
 public void OnMapStart()
@@ -187,7 +184,7 @@ public Action ShowAdvert(Handle timer)
 	{
 		if(IsClientInGame(i) && !bIsTunedIn[i])
 		{
-			PrintToChat(i, "\x01[\x04Hive365\x01] \x04This server is running Hive365 Radio type !radiohelp for Help!");
+			PrintToChat(i, "%s This server is running Hive365 Radio type !radiohelp for Help!", CHAT_PREFIX);
 		}
 	}
 }
@@ -197,7 +194,7 @@ public Action HelpMessage(Handle timer, any serial)
 	int client = GetClientFromSerial(serial);
 	if(client > 0 && client <= MaxClients && IsClientInGame(client))
 	{
-		PrintToChat(client, "\x01[\x04Hive365\x01] \x04This server is running Hive365 Radio type !radiohelp for Help!");
+		PrintToChat(client, "%s This server is running Hive365 Radio type !radiohelp for Help!", CHAT_PREFIX);
 	}
 	
 	return Plugin_Continue;
@@ -213,7 +210,7 @@ public Action Cmd_DjFtw(int client, int args)
 	
 	if(!HandleSteamIDTracking(stringmapDJFTW, client))
 	{
-		ReplyToCommand(client, "\x01[\x04Hive365\x01] \x04You have already rated this DJFTW!");
+		PrintToChat(client, "%s You have already rated this DJFTW!", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
 	
@@ -231,13 +228,13 @@ public Action Cmd_Shoutout(int client, int args)
 	
 	if(args <= 0)
 	{
-		ReplyToCommand(client, "\x01[\x04Hive365\x01] \x04sm_shoutout <shoutout> or !shoutout <shoutout>");
+		PrintToChat(client, "%s !shoutout <shoutout> or !sh <shoutout>", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
 	
 	if(!HandleSteamIDTracking(stringmapShoutout, client, true, 10))
 	{
-		ReplyToCommand(client, "\x01[\x04Hive365\x01] \x04Please wait a few minutes between Shoutouts.");
+		PrintToChat(client, "%s Please wait a few minutes between Shoutouts.", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
 	
@@ -261,11 +258,11 @@ public Action Cmd_Choon(int client, int args)
 	
 	if(!HandleSteamIDTracking(stringmapRate, client, true, 5))
 	{
-		ReplyToCommand(client, "\x01[\x04Hive365\x01] \x04Please wait a few minutes between Choons and Poons");
+		PrintToChat(client, "%s Please wait a few minutes between Choons and Poons", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
 	
-	PrintToChatAll("\x01[\x04Hive365\x01] \x04%N thinks that %s is a banging Choon!", client, szCurrentSong);
+	PrintToChatAll("%s %N thinks that %s is a banging Choon!", CHAT_PREFIX, client, szCurrentSong);
 	
 	MakeSocketRequest(SocketInfo_Choon, GetClientSerial(client));
 	
@@ -281,11 +278,11 @@ public Action Cmd_Poon(int client, int args)
 	
 	if(!HandleSteamIDTracking(stringmapRate, client, true, 5))
 	{
-		ReplyToCommand(client, "\x01[\x04Hive365\x01] \x04Please wait a few minutes between Choons and Poons");
+		PrintToChat(client, "%s Please wait a few minutes between Choons and Poons", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
 	
-	PrintToChatAll("\x01[\x04Hive365\x01] \x04%N thinks that %s  is a bit of a naff Poon!", client, szCurrentSong);
+	PrintToChatAll("%s %N thinks that %s  is a bit of a naff Poon!", CHAT_PREFIX, client, szCurrentSong);
 	
 	MakeSocketRequest(SocketInfo_Poon, GetClientSerial(client));
 	
@@ -301,13 +298,13 @@ public Action Cmd_Request(int client, int args)
 	
 	if(args <= 0)
 	{
-		ReplyToCommand(client, "\x01[\x04Hive365\x01] \x04sm_request <request> or !request <request>");
+		PrintToChat(client, "%s !request <request> or !req <request>", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
 	
 	if(!HandleSteamIDTracking(stringmapRequest, client, true, 10))
 	{
-		ReplyToCommand(client, "\x01[\x04Hive365\x01] \x04Please wait a few minutes between Requests");
+		PrintToChat(client, "%s Please wait a few minutes between Requests", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
 	
@@ -350,7 +347,7 @@ public Action Cmd_SongInfo(int client, int args)
 		return Plugin_Handled;
 	}
 		
-	ReplyToCommand(client, "\x01[\x04Hive365\x01] \x04Current Song is: %s", szCurrentSong);
+	PrintToChat(client, "%s Current Song is: %s", CHAT_PREFIX, szCurrentSong);
 	
 	return Plugin_Handled;
 }
@@ -362,7 +359,7 @@ public Action Cmd_DjInfo(int client, int args)
 		return Plugin_Handled;
 	}
 		
-	ReplyToCommand(client, "\x01[\x04Hive365\x01] \x04Your DJ is: %s", szCurrentDJ);
+	PrintToChat(client, "%s Your DJ is: %s", CHAT_PREFIX, szCurrentDJ);
 	
 	return Plugin_Handled;
 }
@@ -375,7 +372,7 @@ public int RadioTunedMenuHandle(Menu menu, MenuAction action, int client, int op
 		char radiooption[3];
 		if(!menu.GetItem(option, radiooption, sizeof(radiooption)))
 		{
-			PrintToChat(client, "\x01[\x04Hive365\x01] \x04Unknown option selected");
+			PrintToChat(client, "%s Unknown option selected", CHAT_PREFIX);
 		}
 		switch(view_as<RadioOptions>(StringToInt(radiooption)))
 		{
@@ -391,9 +388,9 @@ public int RadioTunedMenuHandle(Menu menu, MenuAction action, int client, int op
 			{
 				if(bIsTunedIn[client])
 				{
-					PrintToChat(client, "\x01[\x04Hive365\x01] \x04Radio has been turned off. Thanks for listening!");
+					PrintToChat(client, "%s Radio has been turned off. Thanks for listening!", CHAT_PREFIX);
 					
-					LoadMOTDPanel(client, "Thanks for listening", "about:blank", false);
+					LoadMOTDPanel(client, "Thanks for listening", "about:blank");
 					
 					bIsTunedIn[client] = false;
 				}
@@ -414,14 +411,14 @@ public int RadioVolumeMenuHandle(Menu menu, MenuAction action, int client, int o
 		
 		if(!menu.GetItem(option, szVolume, sizeof(szVolume)))
 		{
-			PrintToChat(client, "\x01[\x04Hive365\x01] \x04Unknown option selected.");
+			PrintToChat(client, "%s Unknown option selected.", CHAT_PREFIX);
 		}
 		
 		char szURL[sizeof(RADIO_PLAYER_URL) + 15];
 		
 		Format(szURL, sizeof(szURL), RADIO_PLAYER_URL);
 	
-		LoadMOTDPanel(client, "Hive365", szURL, false);
+		LoadMOTDPanel(client, "Hive365", szURL);
 		
 		bIsTunedIn[client] = true;
 	}
@@ -434,7 +431,7 @@ public int HelpMenuHandle(Menu menu, MenuAction action, int client, int option)
 		char radiooption[3];
 		if(!menu.GetItem(option, radiooption, sizeof(radiooption)))
 		{
-			PrintToChat(client, "\x01[\x04Hive365\x01] \x04Unknown option selected.");
+			PrintToChat(client, "%s Unknown option selected.", CHAT_PREFIX);
 		}
 		
 		switch(StringToInt(radiooption))
@@ -513,18 +510,18 @@ void DisplayRadioMenu(int client)
 			
 			Format(szURL, sizeof(szURL), RADIO_PLAYER_URL);
 			
-			LoadMOTDPanel(client, "Hive365", szURL, true);
+			LoadMOTDPanel(client, "Hive365", szURL);
 			
 			bIsTunedIn[client] = true;
 		}
 	}
 	else
 	{
-		PrintToChat(client, "\x01 \x04[Hive365] Hive365 is currently disabled");
+		PrintToChat(client, "%s Hive365 is currently disabled", CHAT_PREFIX);
 	}
 }
 
-void LoadMOTDPanel(int client, const char [] title, const char [] page, bool display)
+void LoadMOTDPanel(int client, const char [] title, const char [] page)
 {
 	if(client == 0  || !IsClientInGame(client))
 		return;
@@ -535,7 +532,7 @@ void LoadMOTDPanel(int client, const char [] title, const char [] page, bool dis
 	kv.SetNum("type", MOTDPANEL_TYPE_URL);
 	kv.SetString("msg", page);
 
-	ShowVGUIPanel(client, "info", kv, display);
+	ShowVGUIPanel(client, "info", kv, false);
 	
 	delete kv;
 }
@@ -600,7 +597,7 @@ void ParseSocketInfo(char [] receivedData)
 				if(!StrEqual(song, szCurrentSong, false))
 				{
 					strcopy(szCurrentSong, sizeof(szCurrentSong), song);
-					PrintToChatAll("\x01[\x04Hive365\x01] \x04Now Playing: %s", szCurrentSong);
+					PrintToChatAll("%s Now Playing: %s", CHAT_PREFIX, szCurrentSong);
 				}
 			}
 			if(json_get_string(jsonObject, "title", dj, sizeof(dj)))
@@ -610,7 +607,7 @@ void ParseSocketInfo(char [] receivedData)
 				{
 					strcopy(szCurrentDJ, sizeof(szCurrentDJ), dj);
 					stringmapDJFTW.Clear();
-					PrintToChatAll("\x01[\x04Hive365\x01] \x04Your DJ is: %s", szCurrentDJ);
+					PrintToChatAll("%s Your DJ is: %s", CHAT_PREFIX, szCurrentDJ);
 				}
 			}
 			json_destroy(jsonObject);
@@ -740,15 +737,15 @@ public OnSocketDisconnected(Handle socket, any pack)
 		{
 			if(type == SocketInfo_DjFtw)
 			{
-				PrintToChatAll("\x01[\x04Hive365\x01] \x04%N thinks %s is a banging DJ!", client, szCurrentDJ);
+				PrintToChatAll("%s %N thinks %s is a banging DJ!", CHAT_PREFIX, client, szCurrentDJ);
 			}
 			else if(type == SocketInfo_Shoutout)
 			{
-				PrintToChat(client, "\x01[\x04Hive365\x01] \x04Your Shoutout has been sent!");
+				PrintToChat(client, "%s Your Shoutout has been sent!", CHAT_PREFIX);
 			}
 			else
 			{
-				PrintToChat(client, "\x01[\x04Hive365\x01] \x04Your Request has been sent!");
+				PrintToChat(client, "%s Your Request has been sent!", CHAT_PREFIX);
 			}
 		}
 	}
