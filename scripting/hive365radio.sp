@@ -8,9 +8,6 @@
 
 #define UPDATE_URL    "http://hive365.co.uk/plugin/updatefile.txt"
 
-#undef REQUIRE_EXTENSIONS
-#include <SteamWorks>
-
 #pragma semicolon 1
 #pragma newdecls required
 
@@ -217,25 +214,6 @@ public void HookShowInfo(ConVar convar, const char[] oldValue, const char[] newV
 	if(convar.IntValue < 1)
 	{
 		convar.IntValue = 1;
-	}
-}
-
-public int SteamWorks_SteamServersConnected()
-{
-	if(GetFeatureStatus(FeatureType_Native, "SteamWorks_GetPublicIP") == FeatureStatus_Available)
-	{
-		int ipParts[4];
-		if(SteamWorks_GetPublicIP(ipParts))
-		{
-			char ip[20];
-			char encodedIP[128];
-			
-			Format(ip, sizeof(ip), "%i.%i.%i.%i", ipParts[0], ipParts[1], ipParts[2], ipParts[3]);
-			EncodeBase64(encodedIP, sizeof(encodedIP), ip);
-			
-			Format(szEncodedHostip, sizeof(szEncodedHostip), "&ip=%s", encodedIP);
-			MakeSocketRequest(SocketInfo_HeartBeat);
-		}
 	}
 }
 
