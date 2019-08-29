@@ -7,7 +7,7 @@
 #pragma newdecls required
 
 //Defines
-#define PLUGIN_VERSION			"4.0.5.4"
+#define PLUGIN_VERSION			"4.0.5.5"
 #define DEFAULT_RADIO_VOLUME		20
 char RADIO_PLAYER_URL[]		=	"hive365.co.uk/plugin/player";
 char CHAT_PREFIX[]			=	"\x03[\x04Hive365\x03]";
@@ -106,15 +106,15 @@ public void OnPluginStart()
 	
 	menuVolume = new Menu(RadioVolumeMenuHandle);
 	menuVolume.SetTitle("Hive365 Volume");
-	menuVolume.AddItem("3", "Volume: 3%");
-	menuVolume.AddItem("7", "Volume: 7%");
-	menuVolume.AddItem("10", "Volume: 10%");
-	menuVolume.AddItem("15", "Volume: 15% (Default)");
-	menuVolume.AddItem("20", "Volume: 20%");
-	menuVolume.AddItem("35", "Volume: 35%");
-	menuVolume.AddItem("50", "Volume: 50%");
-	menuVolume.AddItem("75", "Volume: 75%");
-	menuVolume.AddItem("100", "Volume: 100%");
+	menuVolume.AddItem("3", "Volume : 3%");
+	menuVolume.AddItem("7", "Volume : 7%");
+	menuVolume.AddItem("10", "Volume : 10%");
+	menuVolume.AddItem("15", "Volume : 15% (Default)");
+	menuVolume.AddItem("20", "Volume : 20%");
+	menuVolume.AddItem("35", "Volume : 35%");
+	menuVolume.AddItem("50", "Volume : 50%");
+	menuVolume.AddItem("75", "Volume : 75%");
+	menuVolume.AddItem("100", "Volume : 100%");
 	menuVolume.Pagination = MENU_NO_PAGINATION;
 	menuVolume.ExitButton = true;
 	
@@ -182,24 +182,17 @@ public Action GetStreamInfoTimer(Handle timer)
 }
 
 public Action ShowAdvert(Handle timer)
-{	
+{
 	for(int i = 1; i <= MaxClients; i++)
-	{
 		if(IsClientInGame(i) && !bIsTunedIn[i])
-		{
-			PrintToChat(i, "%s This server is running Hive365 Radio type !radiohelp for Help!", CHAT_PREFIX);
-		}
-	}
+			PrintToChat(i, "%s This server is running \x04Hive365 Radio. \x03Type \x04!radiohelp \x03for Help!", CHAT_PREFIX);
 }
 
 public Action HelpMessage(Handle timer, any serial)
 {
 	int client = GetClientFromSerial(serial);
 	if(client > 0 && client <= MaxClients && IsClientInGame(client))
-	{
-		PrintToChat(client, "%s This server is running Hive365 Radio type !radiohelp for Help!", CHAT_PREFIX);
-	}
-	
+		PrintToChat(client, "%s This server is running \x04Hive365 Radio. \x03Type \x04!radiohelp \x03for Help!", CHAT_PREFIX);	
 	return Plugin_Continue;
 }
 
@@ -207,118 +200,83 @@ public Action HelpMessage(Handle timer, any serial)
 public Action Cmd_DjFtw(int client, int args)
 {
 	if(client == 0 || !IsClientInGame(client))
-	{
 		return Plugin_Handled;
-	}
-	
 	if(!HandleSteamIDTracking(stringmapDJFTW, client))
 	{
-		PrintToChat(client, "%s You have already rated this DJFTW!", CHAT_PREFIX);
+		PrintToChat(client, "%s \x04You have already rated this DJFTW!", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
-	
 	MakeSocketRequest(SocketInfo_DjFtw, GetClientSerial(client));
-	
 	return Plugin_Handled;
 }
 
 public Action Cmd_Shoutout(int client, int args)
 {
 	if(client == 0 || !IsClientInGame(client))
-	{
 		return Plugin_Handled;
-	}
-	
 	if(args <= 0)
 	{
-		PrintToChat(client, "%s !shoutout <shoutout> or !sh <shoutout>", CHAT_PREFIX);
+		PrintToChat(client, "%s Type \x04!shoutout <shoutout> \x03or \x04!sh <shoutout>", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
-	
 	if(!HandleSteamIDTracking(stringmapShoutout, client, true, 10))
 	{
-		PrintToChat(client, "%s Please wait a few minutes between Shoutouts.", CHAT_PREFIX);
+		PrintToChat(client, "%s \x04Please wait a few minutes between Shoutouts.", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
-	
 	char buffer[128];
 	GetCmdArgString(buffer, sizeof(buffer));
-	
 	if(strlen(buffer) > 3)
-	{
-		MakeSocketRequest(SocketInfo_Shoutout, GetClientSerial(client), buffer);
-	}
-	
+		MakeSocketRequest(SocketInfo_Shoutout, GetClientSerial(client), buffer);	
 	return Plugin_Handled;
 }
 
 public Action Cmd_Choon(int client, int args)
 {
 	if(client == 0 || !IsClientInGame(client))
-	{
 		return Plugin_Handled;
-	}
-	
 	if(!HandleSteamIDTracking(stringmapRate, client, true, 5))
 	{
-		PrintToChat(client, "%s Please wait a few minutes between Choons and Poons", CHAT_PREFIX);
+		PrintToChat(client, "%s \x04Please wait a few minutes between Choons and Poons", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
-	
-	PrintToChatAll("%s %N thinks that %s is a banging Choon!", CHAT_PREFIX, client, szCurrentSong);
-	
+	PrintToChatAll("%s \x04%N \x03thinks that \x04%s \x03is a \x04banging Choon!", CHAT_PREFIX, client, szCurrentSong);
 	MakeSocketRequest(SocketInfo_Choon, GetClientSerial(client));
-	
 	return Plugin_Handled;
 }
 
 public Action Cmd_Poon(int client, int args)
 {
 	if(client == 0 || !IsClientInGame(client))
-	{
 		return Plugin_Handled;
-	}
-	
 	if(!HandleSteamIDTracking(stringmapRate, client, true, 5))
 	{
-		PrintToChat(client, "%s Please wait a few minutes between Choons and Poons", CHAT_PREFIX);
+		PrintToChat(client, "%s \x04Please wait a few minutes between Choons and Poons", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
-	
-	PrintToChatAll("%s %N thinks that %s  is a bit of a naff Poon!", CHAT_PREFIX, client, szCurrentSong);
-	
+	PrintToChatAll("%s \x04%N \x03thinks that \x04%s \x03is a bit of a \x04naff Poon!", CHAT_PREFIX, client, szCurrentSong);
 	MakeSocketRequest(SocketInfo_Poon, GetClientSerial(client));
-	
 	return Plugin_Handled;
 }
 
 public Action Cmd_Request(int client, int args)
 {
 	if(client == 0 || !IsClientInGame(client))
-	{
 		return Plugin_Handled;
-	}
-	
 	if(args <= 0)
 	{
-		PrintToChat(client, "%s !request <request> or !req <request>", CHAT_PREFIX);
+		PrintToChat(client, "%s Type \x04!request <request> \x03or \x04!req <request>", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
-	
 	if(!HandleSteamIDTracking(stringmapRequest, client, true, 10))
 	{
-		PrintToChat(client, "%s Please wait a few minutes between Requests", CHAT_PREFIX);
+		PrintToChat(client, "%s \x04Please wait a few minutes between Requests", CHAT_PREFIX);
 		return Plugin_Handled;
 	}
-	
 	char buffer[128];
 	GetCmdArgString(buffer, sizeof(buffer));
-	
 	if(strlen(buffer) > 3)
-	{
-		MakeSocketRequest(SocketInfo_Request, GetClientSerial(client), buffer);
-	}
-	
+		MakeSocketRequest(SocketInfo_Request, GetClientSerial(client), buffer);	
 	return Plugin_Handled;
 }
 
@@ -340,7 +298,7 @@ public Action Cmd_SongInfo(int client, int args)
 {
 	if(client == 0 || !IsClientInGame(client))
 		return Plugin_Handled;
-	PrintToChat(client, "%s Current Song is: %s", CHAT_PREFIX, szCurrentSong);
+	PrintToChat(client, "%s Current Song is : \x04%s", CHAT_PREFIX, szCurrentSong);
 	return Plugin_Handled;
 }
 
@@ -348,7 +306,7 @@ public Action Cmd_DjInfo(int client, int args)
 {
 	if(client == 0 || !IsClientInGame(client))
 		return Plugin_Handled;
-	PrintToChat(client, "%s Your DJ is: %s", CHAT_PREFIX, szCurrentDJ);
+	PrintToChat(client, "%s Your DJ is : \x04%s", CHAT_PREFIX, szCurrentDJ);
 	return Plugin_Handled;
 }
 
@@ -360,7 +318,7 @@ public int RadioTunedMenuHandle(Menu menu, MenuAction action, int client, int op
 		char radiooption[3];
 		if(!menu.GetItem(option, radiooption, sizeof(radiooption)))
 		{
-			PrintToChat(client, "%s Unknown option selected", CHAT_PREFIX);
+			PrintToChat(client, "%s \x04Unknown option selected", CHAT_PREFIX);
 		}
 		switch(view_as<RadioOptions>(StringToInt(radiooption)))
 		{
@@ -378,12 +336,12 @@ public int RadioTunedMenuHandle(Menu menu, MenuAction action, int client, int op
 			{
 				if(bIsTunedIn[client])
 				{
-					PrintToChat(client, "%s \x04Radio has been turned off. Thanks for listening!", CHAT_PREFIX);
+					PrintToChat(client, "%s \x04Hive365 Radio has been turned off. Thanks for listening!", CHAT_PREFIX);
 					LoadMOTDPanel(client, "Thanks for listening", "about:blank");
 					bIsTunedIn[client] = false;
 				}
 				else
-					PrintToChat(client, "%s \x04Radio is already off", CHAT_PREFIX);
+					PrintToChat(client, "%s \x04Hive365 Radio is already off", CHAT_PREFIX);
 			}
 			case Radio_Help:
 				Cmd_RadioHelp(client, 0);
@@ -398,7 +356,7 @@ public int RadioVolumeMenuHandle(Menu menu, MenuAction action, int client, int o
 		char szVolume[10];
 		if(!menu.GetItem(option, szVolume, sizeof(szVolume)))
 		{
-			PrintToChat(client, "%s Unknown option selected.", CHAT_PREFIX);
+			PrintToChat(client, "%s \x04Unknown option selected.", CHAT_PREFIX);
 		}
 		char szURL[sizeof(RADIO_PLAYER_URL) + 15];
 		Format(szURL, sizeof(szURL), "%s?volume=%s", RADIO_PLAYER_URL, szVolume);
@@ -414,7 +372,7 @@ public int HelpMenuHandle(Menu menu, MenuAction action, int client, int option)
 		char radiooption[3];
 		if(!menu.GetItem(option, radiooption, sizeof(radiooption)))
 		{
-			PrintToChat(client, "%s Unknown option selected.", CHAT_PREFIX);
+			PrintToChat(client, "%s \x04Unknown option selected.", CHAT_PREFIX);
 		}
 		
 		switch(StringToInt(radiooption))
@@ -497,7 +455,7 @@ void DisplayRadioMenu(int client)
 	}
 	else
 	{
-		PrintToChat(client, "%s \x04Hive365 is currently disabled", CHAT_PREFIX);
+		PrintToChat(client, "%s \x04Hive365 Radio is currently disabled", CHAT_PREFIX);
 	}
 }
 
@@ -574,7 +532,7 @@ void ParseSocketInfo(char [] receivedData)
 				if(!StrEqual(song, szCurrentSong, false))
 				{
 					strcopy(szCurrentSong, sizeof(szCurrentSong), song);
-					PrintToChatAll("%s Now Playing: %s", CHAT_PREFIX, szCurrentSong);
+					PrintToChatAll("%s Now Playing : \x04%s", CHAT_PREFIX, szCurrentSong);
 				}
 			}
 			if(json_get_string(jsonObject, "title", dj, sizeof(dj)))
@@ -584,7 +542,7 @@ void ParseSocketInfo(char [] receivedData)
 				{
 					strcopy(szCurrentDJ, sizeof(szCurrentDJ), dj);
 					stringmapDJFTW.Clear();
-					PrintToChatAll("%s Your DJ is: %s", CHAT_PREFIX, szCurrentDJ);
+					PrintToChatAll("%s Your DJ is : \x04%s", CHAT_PREFIX, szCurrentDJ);
 				}
 			}
 			json_destroy(jsonObject);
@@ -714,15 +672,15 @@ public OnSocketDisconnected(Handle socket, any pack)
 		{
 			if(type == SocketInfo_DjFtw)
 			{
-				PrintToChatAll("%s %N thinks %s is a banging DJ!", CHAT_PREFIX, client, szCurrentDJ);
+				PrintToChatAll("%s \x04%N thinks \x03%s is a \x04banging DJ!", CHAT_PREFIX, client, szCurrentDJ);
 			}
 			else if(type == SocketInfo_Shoutout)
 			{
-				PrintToChat(client, "%s Your Shoutout has been sent!", CHAT_PREFIX);
+				PrintToChat(client, "%s \x04Your Shoutout has been sent!", CHAT_PREFIX);
 			}
 			else
 			{
-				PrintToChat(client, "%s Your Request has been sent!", CHAT_PREFIX);
+				PrintToChat(client, "%s \x04Your Request has been sent!", CHAT_PREFIX);
 			}
 		}
 	}
