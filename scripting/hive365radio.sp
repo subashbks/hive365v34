@@ -106,14 +106,14 @@ public void OnPluginStart()
 	
 	menuVolume = new Menu(RadioVolumeMenuHandle);
 	menuVolume.SetTitle("Hive365 Volume");
-	menuVolume.AddItem("1", "Volume: 1%");
-	menuVolume.AddItem("5", "Volume: 5%");
+	menuVolume.AddItem("3", "Volume: 3%");
+	menuVolume.AddItem("7", "Volume: 7%");
 	menuVolume.AddItem("10", "Volume: 10%");
-	menuVolume.AddItem("20", "Volume: 20% (Default)");
+	menuVolume.AddItem("15", "Volume: 15% (Default)");
+	menuVolume.AddItem("20", "Volume: 20%");
 	menuVolume.AddItem("35", "Volume: 35%");
 	menuVolume.AddItem("50", "Volume: 50%");
-	menuVolume.AddItem("65", "Volume: 65%");
-	menuVolume.AddItem("80", "Volume: 80%");
+	menuVolume.AddItem("75", "Volume: 75%");
 	menuVolume.AddItem("100", "Volume: 100%");
 	menuVolume.Pagination = MENU_NO_PAGINATION;
 	menuVolume.ExitButton = true;
@@ -325,44 +325,30 @@ public Action Cmd_Request(int client, int args)
 public Action Cmd_RadioHelp(int client, int args)
 {
 	if(client > 0 && client <= MaxClients && IsClientInGame(client))
-	{
 		menuHelp.Display(client, 30);
-	}
-	
 	return Plugin_Handled;
 }
 
 public Action Cmd_RadioMenu(int client, int args)
 {
 	if(client > 0 && client <= MaxClients && IsClientInGame(client))
-	{
-		menuTuned.Display(client, 30);
-	}
-	
+		menuTuned.Display(client, 30);	
 	return Plugin_Handled;
 }
 
 public Action Cmd_SongInfo(int client, int args)
 {
 	if(client == 0 || !IsClientInGame(client))
-	{
 		return Plugin_Handled;
-	}
-		
 	PrintToChat(client, "%s Current Song is: %s", CHAT_PREFIX, szCurrentSong);
-	
 	return Plugin_Handled;
 }
 
 public Action Cmd_DjInfo(int client, int args)
 {
 	if(client == 0 || !IsClientInGame(client))
-	{
 		return Plugin_Handled;
-	}
-		
 	PrintToChat(client, "%s Your DJ is: %s", CHAT_PREFIX, szCurrentDJ);
-	
 	return Plugin_Handled;
 }
 
@@ -381,30 +367,26 @@ public int RadioTunedMenuHandle(Menu menu, MenuAction action, int client, int op
 			case Radio_Volume:
 			{
 				if(client > 0 && client <= MaxClients && IsClientInGame(client))
-				{
 					menuVolume.Display(client, 30);
-				}
 			}
 			case Radio_On:
 			{
 				if(client > 0 && client <= MaxClients && IsClientInGame(client))
-				{
 					DisplayRadioMenu(client);
-				}
 			}
 			case Radio_Off:
 			{
 				if(bIsTunedIn[client])
 				{
-					PrintToChat(client, "%s Radio has been turned off. Thanks for listening!", CHAT_PREFIX);
+					PrintToChat(client, "%s \x04Radio has been turned off. Thanks for listening!", CHAT_PREFIX);
 					LoadMOTDPanel(client, "Thanks for listening", "about:blank");
 					bIsTunedIn[client] = false;
 				}
+				else
+					PrintToChat(client, "%s \x04Radio is already off", CHAT_PREFIX);
 			}
 			case Radio_Help:
-			{
-				menuHelp.Display(client, 30);
-			}
+				Cmd_RadioHelp(client, 0);
 		}
 	}
 }
@@ -508,7 +490,7 @@ void DisplayRadioMenu(int client)
 		if(!bIsTunedIn[client])
 		{
 			char szURL[sizeof(RADIO_PLAYER_URL) + 15];
-			Format(szURL, sizeof(szURL), "%s?volume=20", RADIO_PLAYER_URL);
+			Format(szURL, sizeof(szURL), "%s?volume=15", RADIO_PLAYER_URL);
 			LoadMOTDPanel(client, "Hive365", szURL);
 			bIsTunedIn[client] = true;
 		}
