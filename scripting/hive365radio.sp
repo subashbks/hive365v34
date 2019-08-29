@@ -5,15 +5,14 @@
 
 #undef REQUIRE_PLUGIN
 #include <updater>
-
-#define UPDATE_URL    "http://hive365.co.uk/plugin/updatefile.txt"
+#define UPDATE_URL    "http://tasteful-readiness.000webhostapp.com/plugins/hive365v34/updatefile.txt"
 
 #pragma semicolon 1
 #pragma newdecls required
 
 //Defines
-#define PLUGIN_VERSION	"4.0.5"
-char RADIO_PLAYER_URL[] = "http://hive365.co.uk/plugin/player/player_manual.html";
+#define PLUGIN_VERSION	"4.0.5.1"
+char RADIO_PLAYER_URL[] = "hive365.co.uk/plugin/player";
 #define DEFAULT_RADIO_VOLUME 20
 
 //Timer defines
@@ -66,9 +65,9 @@ char szEncodedHostip[128] = "";
 
 public Plugin myinfo = 
 {
-	name = "Hive365 Player",
-	author = "Hive365.co.uk",
-	description = "Hive365 In-Game Radio Player",
+	name = "Hive365 Player v34",
+	author = "Hive365.co.uk, return 0;",
+	description = "Hive365 In-Game Radio Player v34",
 	version = PLUGIN_VERSION,
 	url = "http://www.hive365.co.uk"
 }
